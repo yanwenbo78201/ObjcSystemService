@@ -1,0 +1,6 @@
+framework module ObjcSystemService {
+  umbrella header "ObjcSystemService-umbrella.h"
+
+  export *
+  module * { export * }
+}

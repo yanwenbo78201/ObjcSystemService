@@ -7,7 +7,8 @@
 //
 
 #import "FYViewController.h"
-
+#import <ObjcSystemService/SystemService.h>
+#import <ObjcSystemService_Example-Swift.h>
 @interface FYViewController ()
 
 @end
@@ -18,6 +19,16 @@
 {
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
+    
+    SystemService *systemService = [[SystemService alloc] init];
+    NSLog(@"%@",[systemService deviceInfo]);
+}
+
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
+{
+    [super touchesBegan:touches withEvent:event];
+    SwiftViewController *swiftVC = [[SwiftViewController alloc] init];
+    [self.navigationController pushViewController:swiftVC animated:true];
 }
 
 - (void)didReceiveMemoryWarning

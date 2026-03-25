@@ -1,0 +1,6 @@
+framework module Pods_ObjcSystemService_Example {
+  umbrella header "Pods-ObjcSystemService_Example-umbrella.h"
+
+  export *
+  module * { export * }
+}
