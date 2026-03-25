@@ -1,0 +1,13 @@
+use_frameworks!
+
+platform :ios, '10.0'
+
+target 'ObjcSystemService_Example' do
+  pod 'ObjcSystemService', :path => '../'
+
+  target 'ObjcSystemService_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end
