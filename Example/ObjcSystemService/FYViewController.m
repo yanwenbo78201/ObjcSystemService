@@ -22,6 +22,8 @@
     
     SystemService *systemService = [[SystemService alloc] init];
     NSLog(@"%@",[systemService deviceInfo]);
+    double a = 8589934292.0;
+    NSLog(@"%f",a);
 }
 
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
