@@ -185,10 +185,7 @@
 + (NSString *)getiPadDeviceName:(NSString *)deviceType {
     NSDictionary *iPadModels = [self getiPadModelDictionary];
     NSString *modelName = iPadModels[deviceType];
-    if (modelName) {
-        return modelName;
-    }
-    return [deviceType hasPrefix:@"iPad"] ? @"iPad" : deviceType;
+    return modelName ?: deviceType;
 }
 
 + (NSString *)getiPodDeviceName:(NSString *)deviceType {
