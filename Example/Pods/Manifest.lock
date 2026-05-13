@@ -1,17 +1,17 @@
 PODS:
-  - ObjcSystemService (0.1.2):
-    - ObjcSystemService/System (= 0.1.2)
-  - ObjcSystemService/Broken (0.1.2)
-  - ObjcSystemService/Device (0.1.2)
-  - ObjcSystemService/Network (0.1.2)
-  - ObjcSystemService/Storage (0.1.2)
-  - ObjcSystemService/System (0.1.2):
+  - ObjcSystemService (0.1.3):
+    - ObjcSystemService/System (= 0.1.3)
+  - ObjcSystemService/Broken (0.1.3)
+  - ObjcSystemService/Device (0.1.3)
+  - ObjcSystemService/Network (0.1.3)
+  - ObjcSystemService/Storage (0.1.3)
+  - ObjcSystemService/System (0.1.3):
     - ObjcSystemService/Broken
     - ObjcSystemService/Device
     - ObjcSystemService/Network
     - ObjcSystemService/Storage
     - ObjcSystemService/Time
-  - ObjcSystemService/Time (0.1.2)
+  - ObjcSystemService/Time (0.1.3)
 
 DEPENDENCIES:
   - ObjcSystemService (from `../`)
@@ -21,7 +21,7 @@ EXTERNAL SOURCES:
     :path: "../"
 
 SPEC CHECKSUMS:
-  ObjcSystemService: 08609c50a31e903d2c122da9a19b1c2fd44c933b
+  ObjcSystemService: a392d4d72aad32cc38701ff37b1c03d1e26ed10c
 
 PODFILE CHECKSUM: abe767f9c5666cefb16c0418516dd5b578ce9785
 
