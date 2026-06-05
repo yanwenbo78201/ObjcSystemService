@@ -38,6 +38,14 @@
     });
 }
 
++ (NSDictionary *)getDeviceCommunicationInfoWithOutWifi{
+    NSMutableDictionary *communicationInfo = [NSMutableDictionary dictionary];
+    communicationInfo[@"network"] = [NetworkService getDeviceNetworkType];
+    communicationInfo[@"isvpn"] = [NetworkService getDeviceVPNConnectionStatus];
+    communicationInfo[@"proxied"] = [NetworkService getDeviceNetworkProxyStatus];
+    return communicationInfo;
+}
+
 + (NSString *)getDeviceNetworkProxyStatus {
     NSDictionary *proxySettings = [self getSystemProxySettings];
     NSArray *proxies = [self getProxiesForURL:@"http://www.baidu.com" withSettings:proxySettings];

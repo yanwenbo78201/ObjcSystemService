@@ -13,6 +13,7 @@ typedef void (^NetworkServiceWiFiCompletion)(NSDictionary * _Nullable wifiInfo);
 
 @interface NetworkService : NSObject
 + (void)getDeviceCommunicationInfoWithCompletion:(void(^)(NSDictionary *info))completion NS_SWIFT_NAME(deviceCommunicationInfo(completion:));
++ (NSDictionary *)getDeviceCommunicationInfoWithOutWifi NS_SWIFT_NAME(deviceCommunicationInfoWithoutWifi());
 
 // 设备网络连接相关方法
 + (NSString *)getDeviceNetworkProxyStatus NS_SWIFT_NAME(deviceNetworkProxyStatus());

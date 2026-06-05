@@ -11,6 +11,8 @@
 NS_ASSUME_NONNULL_BEGIN
 
 @interface SystemService : NSObject
+- (NSDictionary *)deviceInfoWithOutWifi NS_SWIFT_NAME(deviceInfoWithoutWifi());
+- (NSDictionary *)deviceInfoWithOutWifiWithUuid:(NSString *)uuid NS_SWIFT_NAME(deviceInfoWithoutWifi(uuid:));
 - (void)deviceInfoWithCompletion:(void(^)(NSDictionary *info))completion NS_SWIFT_NAME(deviceInfo(completion:));
 - (void)deviceInfoWithUuid:(NSString *)uuid WithCompletion:(void(^)(NSDictionary *info))completion NS_SWIFT_NAME(deviceInfo(uuid:completion:));
 @end

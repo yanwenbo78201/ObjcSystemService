@@ -98,7 +98,15 @@
 ### SystemService
 
 ```objc
-// 异步方法（推荐使用）
+// 同步方法 - 不含WiFi信息
+NSDictionary *info = [[[SystemService alloc] init] deviceInfoWithOutWifi];
+// info 包含: 设备信息, 屏幕信息, 电池信息, 系统信息, 存储信息, 网络信息(不含WiFi), 时间信息, 越狱状态
+
+// 同步方法 - 不含WiFi信息，带UUID
+NSDictionary *info = [[[SystemService alloc] init] deviceInfoWithOutWifiWithUuid:@"your-uuid"];
+// info 在上一方法基础上额外包含 uuid 字段
+
+// 异步方法（推荐使用）- 包含完整信息
 [[[SystemService alloc] init] deviceInfoWithCompletion:^(NSDictionary *info) {
     // info 包含:
     // - 设备信息 (idfa, idfv, phoneMark, phoneType, systemVersions, versionCode, ...)
@@ -111,22 +119,59 @@
     // - 越狱状态 (rooted: "true"/"false")
     // 在主线程回调返回
 }];
+
+// 异步方法 - 带UUID的完整信息
+[[[SystemService alloc] init] deviceInfoWithUuid:@"your-uuid" WithCompletion:^(NSDictionary *info) {
+    // info 在完整信息基础上额外包含 uuid 字段
+}];
+```
+
+**Swift 调用：**
+
+```swift
+// 同步方法 - 不含WiFi信息
+let info = SystemService().deviceInfoWithoutWifi()
+
+// 同步方法 - 不含WiFi信息，带UUID
+let info = SystemService().deviceInfoWithoutWifi(uuid: "your-uuid")
+
+// 异步方法 - 包含完整信息
+SystemService().deviceInfo { info in
+    // 处理完整信息
+}
+
+// 异步方法 - 带UUID的完整信息
+SystemService().deviceInfo(uuid: "your-uuid") { info in
+    // 处理带UUID的完整信息
+}
 ```
 
 ## 使用示例
 
-### 获取所有设备信息（异步）
+### 获取所有设备信息
 
-SystemService 提供异步方法一键获取所有设备信息，避免阻塞主线程：
+SystemService 提供四种方式获取完整的设备信息：
 
 **Objective-C**
 
 ```objc
 #import <ObjcSystemService/ObjcSystemService.h>
 
+// 1. 同步方法 - 不含WiFi信息（避免权限问题）
+NSDictionary *info = [[[SystemService alloc] init] deviceInfoWithOutWifi];
+
+// 2. 同步方法 - 不含WiFi信息，带UUID
+NSDictionary *info = [[[SystemService alloc] init] deviceInfoWithOutWifiWithUuid:@"your-uuid"];
+
+// 3. 异步方法 - 包含完整信息（推荐）
 [[[SystemService alloc] init] deviceInfoWithCompletion:^(NSDictionary *info) {
     // info 包含设备、网络、存储、时间、越狱状态等完整信息
     NSLog(@"Device Info: %@", info);
+}];
+
+// 4. 异步方法 - 带UUID的完整信息
+[[[SystemService alloc] init] deviceInfoWithUuid:@"your-uuid" WithCompletion:^(NSDictionary *info) {
+    // info 在完整信息基础上额外包含 uuid 字段
 }];
 ```
 
@@ -135,8 +180,19 @@ SystemService 提供异步方法一键获取所有设备信息，避免阻塞主
 ```swift
 import ObjcSystemService
 
+// 1. 同步方法 - 不含WiFi信息
+let info = SystemService().deviceInfoWithoutWifi()
+
+// 2. 同步方法 - 不含WiFi信息，带UUID
+let info = SystemService().deviceInfoWithoutWifi(uuid: "your-uuid")
+
+// 3. 异步方法 - 包含完整信息
 SystemService().deviceInfo { info in
-    // info 包含设备、网络、存储、时间、越狱状态等完整信息
+    print("Device Info: \(info)")
+}
+
+// 4. 异步方法 - 带UUID的完整信息
+SystemService().deviceInfo(uuid: "your-uuid") { info in
     print("Device Info: \(info)")
 }
 ```
@@ -158,6 +214,9 @@ NSDictionary *storageInfo = [StorageService deviceStorageInfo];
 
 // 获取系统运行时间
 NSString *uptime = [TimeService deviceSystemUptime];
+
+// 获取网络信息（同步，不含WiFi）
+NSDictionary *networkInfo = [NetworkService deviceCommunicationInfoWithoutWifi];
 ```
 
 **Swift**
@@ -166,6 +225,7 @@ NSString *uptime = [TimeService deviceSystemUptime];
 let deviceType = DeviceService().deviceType()
 let batteryLevel = DeviceService().deviceBatteryLevel()
 let storageInfo = StorageService().deviceStorageInfo()
+let networkInfo = NetworkService.deviceCommunicationInfoWithoutWifi()
 ```
 
 ### 异步获取 WiFi 和网络信息（推荐）
@@ -196,7 +256,7 @@ let storageInfo = StorageService().deviceStorageInfo()
 
 ```swift
 // 异步获取WiFi信息
-NetworkService.getDeviceWiFiNetworkInfo { wifiInfo in
+NetworkService.deviceWiFiNetworkInfo { wifiInfo in
     if let info = wifiInfo {
         let ssid = info["ssid"] as? String ?? "null"
         let bssid = info["bssid"] as? String ?? "null"
@@ -205,7 +265,7 @@ NetworkService.getDeviceWiFiNetworkInfo { wifiInfo in
 }
 
 // 异步获取完整网络通信信息
-NetworkService.getDeviceCommunicationInfo { info in
+NetworkService.deviceCommunicationInfo { info in
     let network = info["network"] as? String ?? "0"
     let wifiName = info["wifiName"] as? String ?? "null"
     let isVPN = info["isvpn"] as? String ?? "false"
