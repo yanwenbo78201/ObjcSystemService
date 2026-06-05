@@ -103,7 +103,7 @@
 }
 
 + (NSString *)getAdvertisingIdentifier{
-    __block NSString *advertisingIdentifier = @"";
+    __block NSString *advertisingIdentifier = @"null";
     if (@available(iOS 14, *)) {
         [ATTrackingManager requestTrackingAuthorizationWithCompletionHandler:^(ATTrackingManagerAuthorizationStatus status) {
             if (status == ATTrackingManagerAuthorizationStatusAuthorized) {
