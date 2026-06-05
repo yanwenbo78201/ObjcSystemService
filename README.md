@@ -11,7 +11,7 @@
 
 | 组件 | 说明 |
 |------|------|
-| **SystemService** | 一键汇总：调用各子服务并合并为单个字典（含 `rooted` 等字段） |
+| **SystemService** | 异步一键汇总：后台线程获取所有信息，回调返回合并字典（含 `rooted` 等字段） |
 | **DeviceService** | 系统版本、机型、屏幕、电量、语言时区、模拟器/调试器、IDFA/IDFV（依赖 ATT/AdSupport）等 |
 | **NetworkService** | 网络类型、代理/VPN、Wi‑Fi 信息（支持异步获取）、移动网络类型等 |
 | **StorageService** | 内存与磁盘用量、格式化辅助方法 |
@@ -95,17 +95,39 @@
 [BrokenService phoneBrokenStatus];             // 是否越狱 (YES/NO)
 ```
 
+### SystemService
+
+```objc
+// 异步方法（推荐使用）
+[[[SystemService alloc] init] deviceInfoWithCompletion:^(NSDictionary *info) {
+    // info 包含:
+    // - 设备信息 (idfa, idfv, phoneMark, phoneType, systemVersions, versionCode, ...)
+    // - 屏幕信息 (screenResolution, screenWidth, screenHeight, screenBrightness, ...)
+    // - 电池信息 (batteryLevel, charged)
+    // - 系统信息 (defaultLanguage, defaultTimeZone, cpuNum, simulated, debugged)
+    // - 存储信息 (ramTotal, ramCanUse, cashTotal, cashCanUse)
+    // - 网络信息 (network, wifiName, wifiBssid, isvpn, proxied)
+    // - 时间信息 (totalBootTime, totalBootTimeWake, lastBootTime)
+    // - 越狱状态 (rooted: "true"/"false")
+    // 在主线程回调返回
+}];
+```
+
 ## 使用示例
 
-### 同步获取所有设备信息
+### 获取所有设备信息（异步）
+
+SystemService 提供异步方法一键获取所有设备信息，避免阻塞主线程：
 
 **Objective-C**
 
 ```objc
 #import <ObjcSystemService/ObjcSystemService.h>
 
-NSDictionary *info = [[[SystemService alloc] init] deviceInfo];
-// 返回包含设备、网络、存储、时间、越狱状态等完整信息
+[[[SystemService alloc] init] deviceInfoWithCompletion:^(NSDictionary *info) {
+    // info 包含设备、网络、存储、时间、越狱状态等完整信息
+    NSLog(@"Device Info: %@", info);
+}];
 ```
 
 **Swift**
@@ -113,7 +135,10 @@ NSDictionary *info = [[[SystemService alloc] init] deviceInfo];
 ```swift
 import ObjcSystemService
 
-let info = SystemService().deviceInfo()
+SystemService().deviceInfo { info in
+    // info 包含设备、网络、存储、时间、越狱状态等完整信息
+    print("Device Info: \(info)")
+}
 ```
 
 ### 按需获取特定信息
