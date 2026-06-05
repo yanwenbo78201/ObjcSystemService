@@ -9,6 +9,7 @@
 #import "FYViewController.h"
 #import <ObjcSystemService/SystemService.h>
 #import <ObjcSystemService_Example-Swift.h>
+#import <FYLocationObjc.h>
 @interface FYViewController ()
 
 @end
@@ -20,8 +21,13 @@
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
     
-    SystemService *systemService = [[SystemService alloc] init];
-    NSLog(@"%@",[systemService deviceInfo]);
+    [[FYLocationObjc sharedManager] requestLocationWithRequired:NO completion:^(BOOL success, CLLocationCoordinate2D coordinate, BOOL needShowAlert, BOOL authStatus) {
+        [[SystemService new] deviceInfoWithCompletion:^(NSDictionary *info) {
+            NSLog(@"设备信息: %@", info);
+        }];
+        
+    }];
+    /*NSLog(@"%@",[systemService deviceInfo])*/;
     double a = 8589934292.0;
     NSLog(@"%f",a);
 }

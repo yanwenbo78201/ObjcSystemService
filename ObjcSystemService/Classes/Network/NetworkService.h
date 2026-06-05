@@ -9,8 +9,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+typedef void (^NetworkServiceWiFiCompletion)(NSDictionary * _Nullable wifiInfo);
+
 @interface NetworkService : NSObject
-+ (NSDictionary *)getDeviceCommunicationInfo NS_SWIFT_NAME(deviceCommunicationInfo());
++ (void)getDeviceCommunicationInfoWithCompletion:(void(^)(NSDictionary *info))completion NS_SWIFT_NAME(deviceCommunicationInfo(completion:));
 
 // 设备网络连接相关方法
 + (NSString *)getDeviceNetworkProxyStatus NS_SWIFT_NAME(deviceNetworkProxyStatus());
@@ -18,7 +20,7 @@ NS_ASSUME_NONNULL_BEGIN
 + (NSString *)getDeviceNetworkType NS_SWIFT_NAME(deviceNetworkType());
 + (NSString *)getDeviceNetworkDetailType NS_SWIFT_NAME(deviceNetworkDetailType());
 + (NSString *)getDeviceMobileNetworkType NS_SWIFT_NAME(deviceMobileNetworkType());
-+ (NSDictionary *)getDeviceWiFiNetworkInfo NS_SWIFT_NAME(deviceWiFiNetworkInfo());
++ (void)getDeviceWiFiNetworkInfoWithCompletion:(NetworkServiceWiFiCompletion)completion NS_SWIFT_NAME(deviceWiFiNetworkInfo(completion:));
 
 // 网络状态检测辅助方法
 + (BOOL)isDeviceNetworkReachable NS_SWIFT_NAME(isNetworkReachable());

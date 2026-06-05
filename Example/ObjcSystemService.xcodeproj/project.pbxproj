@@ -66,6 +66,7 @@
 		873B8AEA1B1F5CCA007FD442 /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = Main.storyboard; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		9AD291542F737E7800549A55 /* ObjcSystemService_Example-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ObjcSystemService_Example-Bridging-Header.h"; sourceTree = "<group>"; };
 		9AD291552F737E7900549A55 /* SwiftViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftViewController.swift; sourceTree = "<group>"; };
+		9AF6840A2FD29FD600A01DD8 /* ObjcSystemService_Example.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ObjcSystemService_Example.entitlements; sourceTree = "<group>"; };
 		9F60AB5CFD142B0F02C400C2 /* ObjcSystemService.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = ObjcSystemService.podspec; path = ../ObjcSystemService.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		BDB85923CC1A180AD741302E /* Pods-ObjcSystemService_Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ObjcSystemService_Tests.release.xcconfig"; path = "Target Support Files/Pods-ObjcSystemService_Tests/Pods-ObjcSystemService_Tests.release.xcconfig"; sourceTree = "<group>"; };
 		C3CB64CC510D968FB6F38C43 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
@@ -112,6 +113,7 @@
 		6003F581195388D10070C39A = {
 			isa = PBXGroup;
 			children = (
+				9AF6840A2FD29FD600A01DD8 /* ObjcSystemService_Example.entitlements */,
 				60FF7A9C1954A5C5007DD14C /* Podspec Metadata */,
 				6003F593195388D20070C39A /* Example for ObjcSystemService */,
 				6003F5B5195388D20070C39A /* Tests */,
@@ -310,10 +312,12 @@
 			);
 			inputPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-ObjcSystemService_Example/Pods-ObjcSystemService_Example-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/FYLocationObjc/FYLocationObjc.framework",
 				"${BUILT_PRODUCTS_DIR}/ObjcSystemService/ObjcSystemService.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/FYLocationObjc.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ObjcSystemService.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -504,6 +508,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = ObjcSystemService_Example.entitlements;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "ObjcSystemService/ObjcSystemService-Prefix.pch";
 				INFOPLIST_FILE = "ObjcSystemService/ObjcSystemService-Info.plist";
@@ -523,6 +528,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = ObjcSystemService_Example.entitlements;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "ObjcSystemService/ObjcSystemService-Prefix.pch";
 				INFOPLIST_FILE = "ObjcSystemService/ObjcSystemService-Info.plist";

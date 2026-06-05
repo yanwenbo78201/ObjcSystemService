@@ -10,29 +10,38 @@
 #import <CoreTelephony/CTTelephonyNetworkInfo.h>
 #import <SystemConfiguration/CaptiveNetwork.h>
 #import <SystemConfiguration/SCNetworkReachability.h>
+#import <NetworkExtension/NetworkExtension.h>
 
 @implementation NetworkService
 
 #pragma mark - Public Methods
 
-+ (NSDictionary *)getDeviceCommunicationInfo{
-    NSMutableDictionary *communicationInfo = [NSMutableDictionary dictionary];
-    communicationInfo[@"network"] = [NetworkService getDeviceNetworkType];
-    NSDictionary *wifiData = [NetworkService getDeviceWiFiNetworkInfo];
-    NSString *wifiSSID = [wifiData.allKeys containsObject:@"ssid"] ? wifiData[@"ssid"] : @"null";
-    NSString *wifiBSSID = [wifiData.allKeys containsObject:@"bssid"] ? wifiData[@"bssid"] : @"null";
-    [communicationInfo setValue:wifiSSID forKey:@"wifiName"];
-    [communicationInfo setValue:wifiBSSID forKey:@"wifiBssid"];
-    
-    communicationInfo[@"isvpn"] = [NetworkService getDeviceVPNConnectionStatus];
-    communicationInfo[@"proxied"] = [NetworkService getDeviceNetworkProxyStatus];
-    return communicationInfo;
++ (void)getDeviceCommunicationInfoWithCompletion:(void(^)(NSDictionary *info))completion {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        NSMutableDictionary *communicationInfo = [NSMutableDictionary dictionary];
+        communicationInfo[@"network"] = [NetworkService getDeviceNetworkType];
+        communicationInfo[@"isvpn"] = [NetworkService getDeviceVPNConnectionStatus];
+        communicationInfo[@"proxied"] = [NetworkService getDeviceNetworkProxyStatus];
+
+        [NetworkService getDeviceWiFiNetworkInfoWithCompletion:^(NSDictionary * _Nullable wifiInfo) {
+            NSString *wifiSSID = [wifiInfo.allKeys containsObject:@"ssid"] ? wifiInfo[@"ssid"] : @"null";
+            NSString *wifiBSSID = [wifiInfo.allKeys containsObject:@"bssid"] ? wifiInfo[@"bssid"] : @"null";
+            [communicationInfo setValue:wifiSSID forKey:@"wifiName"];
+            [communicationInfo setValue:wifiBSSID forKey:@"wifiBssid"];
+
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (completion) {
+                    completion([communicationInfo copy]);
+                }
+            });
+        }];
+    });
 }
 
 + (NSString *)getDeviceNetworkProxyStatus {
     NSDictionary *proxySettings = [self getSystemProxySettings];
     NSArray *proxies = [self getProxiesForURL:@"http://www.baidu.com" withSettings:proxySettings];
-    
+
     if (proxies.count > 0) {
         NSDictionary *systemSettings = [proxies objectAtIndex:0];
         if ([[systemSettings objectForKey:(NSString *)kCFProxyTypeKey] isEqualToString:@"kCFProxyTypeNone"]) {
@@ -47,13 +56,13 @@
 + (NSString *)getDeviceVPNConnectionStatus {
     BOOL isVPNConnected = NO;
     NSString *systemVersion = [UIDevice currentDevice].systemVersion;
-    
+
     if (systemVersion.doubleValue >= 9.0) {
         isVPNConnected = [self checkVPNConnectionModern];
     } else {
         isVPNConnected = [self checkVPNConnectionLegacy];
     }
-    
+
     return isVPNConnected ? @"true" : @"false";
 }
 
@@ -64,15 +73,15 @@
 
 + (NSString *)getDeviceNetworkDetailType {
     SCNetworkReachabilityFlags flags = [self getNetworkReachabilityFlags];
-    
+
     if (![self isNetworkReachableWithFlags:flags]) {
         return @"notReachable";
     }
-    
+
     if ([self isNetworkRequiresConnectionWithFlags:flags]) {
         return @"notReachable";
     }
-    
+
     if ([self isNetworkUsingWWANWithFlags:flags]) {
         return [self getDeviceMobileNetworkType];
     } else {
@@ -83,23 +92,44 @@
 + (NSString *)getDeviceMobileNetworkType {
     CTTelephonyNetworkInfo *telephonyInfo = [[CTTelephonyNetworkInfo alloc] init];
     NSString *radioAccessTechnology = [self getCurrentRadioAccessTechnology:telephonyInfo];
-    
+
     if (!radioAccessTechnology) {
         return @"notReachable";
     }
-    
+
     return [self classifyMobileNetworkType:radioAccessTechnology];
 }
 
-+ (NSDictionary *)getDeviceWiFiNetworkInfo {
-    NSArray *supportedInterfaces = [self getSupportedNetworkInterfaces];
-    NSDictionary *currentNetworkInfo = [self getCurrentNetworkInfo:supportedInterfaces];
-    
-    if (currentNetworkInfo) {
-        return [self extractWiFiInfoFromNetworkInfo:currentNetworkInfo];
-    }
-    
-    return nil;
++ (void)getDeviceWiFiNetworkInfoWithCompletion:(NetworkServiceWiFiCompletion)completion {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        if (@available(iOS 14.0, *)) {
+            [NEHotspotNetwork fetchCurrentWithCompletionHandler:^(NEHotspotNetwork * _Nullable currentNetwork) {
+                NSDictionary *wifiInfo = @{
+                    @"ssid": currentNetwork.SSID ?: @"null",
+                    @"bssid": currentNetwork.BSSID ?: @"null"
+                };
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    if (completion) {
+                        completion(wifiInfo);
+                    }
+                });
+            }];
+        } else {
+            NSArray *supportedInterfaces = [self getSupportedNetworkInterfaces];
+            NSDictionary *currentNetworkInfo = [self getCurrentNetworkInfo:supportedInterfaces];
+            NSDictionary *wifiInfo = nil;
+
+            if (currentNetworkInfo) {
+                wifiInfo = [self extractWiFiInfoFromNetworkInfo:currentNetworkInfo];
+            }
+
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (completion) {
+                    completion(wifiInfo);
+                }
+            });
+        }
+    });
 }
 
 + (BOOL)isDeviceNetworkReachable {
@@ -131,7 +161,7 @@
 + (BOOL)checkVPNConnectionModern {
     NSDictionary *proxyDict = CFBridgingRelease(CFNetworkCopySystemProxySettings());
     NSArray *systemProxyKeys = [proxyDict[@"__SCOPED__"] allKeys];
-    
+
     for (NSString *key in systemProxyKeys) {
         if ([self isVPNRelatedInterface:key]) {
             return YES;
@@ -144,7 +174,7 @@
     struct ifaddrs *interfaces = NULL;
     struct ifaddrs *tempAddr = NULL;
     int success = getifaddrs(&interfaces);
-    
+
     if (success == 0) {
         tempAddr = interfaces;
         while (tempAddr != NULL) {
@@ -156,7 +186,7 @@
             tempAddr = tempAddr->ifa_next;
         }
     }
-    
+
     freeifaddrs(interfaces);
     return NO;
 }
@@ -190,17 +220,17 @@
     bzero(&zeroAddress, sizeof(zeroAddress));
     zeroAddress.ss_len = sizeof(zeroAddress);
     zeroAddress.ss_family = AF_INET;
-    
+
     SCNetworkReachabilityRef reachability = SCNetworkReachabilityCreateWithAddress(NULL, (struct sockaddr *)&zeroAddress);
     SCNetworkReachabilityFlags flags;
-    
+
     BOOL reachabilityFlag = SCNetworkReachabilityGetFlags(reachability, &flags);
     CFRelease(reachability);
-    
+
     if (!reachabilityFlag) {
         return 0;
     }
-    
+
     return flags;
 }
 
@@ -239,19 +269,19 @@
             return @"5G";
         }
     }
-    
+
     if ([radioAccessTechnology isEqualToString:CTRadioAccessTechnologyLTE]) {
         return @"4G";
     }
-    
+
     if ([self is3GNetworkType:radioAccessTechnology]) {
         return @"3G";
     }
-    
+
     if ([self is2GNetworkType:radioAccessTechnology]) {
         return @"2G";
     }
-    
+
     return @"Unknow";
 }
 
@@ -293,15 +323,15 @@
 
 + (NSMutableDictionary *)extractWiFiInfoFromNetworkInfo:(NSDictionary *)networkInfo {
     NSMutableDictionary *wifiInfo = [NSMutableDictionary dictionary];
-    
+
     if ([networkInfo.allKeys containsObject:@"SSID"]) {
         [wifiInfo setValue:[networkInfo objectForKey:@"SSID"] forKey:@"ssid"];
     }
-    
+
     if ([networkInfo.allKeys containsObject:@"BSSID"]) {
         [wifiInfo setValue:[networkInfo objectForKey:@"BSSID"] forKey:@"bssid"];
     }
-    
+
     return wifiInfo;
 }
 

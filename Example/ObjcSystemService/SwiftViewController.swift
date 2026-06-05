@@ -16,12 +16,13 @@ class SwiftViewController: UIViewController {
         view.backgroundColor = UIColor.red
         
         let systemService = SystemService()
+    
         
-        if let deviceInfo = systemService.deviceInfo() as? [String:Any]{
-            print(deviceInfo)
-        }else{
-            print("failure")
-        }
+//        if let deviceInfo = systemService.deviceInfo() as? [String:Any]{
+//            print(deviceInfo)
+//        }else{
+//            print("failure")
+//        }
        
         
 

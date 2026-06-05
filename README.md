@@ -41,6 +41,40 @@ let info = SystemService().deviceInfo()
 
 仅需要某一类能力时，可直接调用对应 `*Service` 的类方法（需通过 CocoaPods **子模块** 引入对应源码，见下文）。
 
+### 异步获取 WiFi 信息
+
+NetworkService 提供异步方法获取 WiFi 信息，避免阻塞主线程：
+
+**Objective-C**
+
+```objc
+[NetworkService getDeviceWiFiNetworkInfoWithCompletion:^(NSDictionary *wifiInfo) {
+    NSString *ssid = wifiInfo[@"ssid"] ?: @"null";
+    NSString *bssid = wifiInfo[@"bssid"] ?: @"null";
+    // 处理 WiFi 信息
+}];
+
+// 获取完整网络通信信息（异步）
+[NetworkService getDeviceCommunicationInfoWithCompletion:^(NSDictionary *info) {
+    // info 包含 network、wifiName、wifiBssid、isvpn、proxied 等字段
+}];
+```
+
+**Swift**
+
+```swift
+NetworkService.getWiFiNetworkInfo { wifiInfo in
+    let ssid = wifiInfo?["ssid"] as? String ?? "null"
+    let bssid = wifiInfo?["bssid"] as? String ?? "null"
+    // 处理 WiFi 信息
+}
+
+// 获取完整网络通信信息（异步）
+NetworkService.getCommunicationInfo { info in
+    // info 包含 network、wifiName、wifiBssid、isvpn、proxied 等字段
+}
+```
+
 ## 子模块（Subspec）与按需集成
 
 默认 `pod 'ObjcSystemService'` 会安装 **`System` 子模块**，并自动依赖其余全部子模块，行为与「整库」一致。

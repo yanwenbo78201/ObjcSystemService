@@ -1,4 +1,5 @@
 PODS:
+  - FYLocationObjc (0.1.1)
   - ObjcSystemService (0.1.5):
     - ObjcSystemService/System (= 0.1.5)
   - ObjcSystemService/Broken (0.1.5)
@@ -14,15 +15,21 @@ PODS:
   - ObjcSystemService/Time (0.1.5)
 
 DEPENDENCIES:
+  - FYLocationObjc
   - ObjcSystemService (from `../`)
+
+SPEC REPOS:
+  trunk:
+    - FYLocationObjc
 
 EXTERNAL SOURCES:
   ObjcSystemService:
     :path: "../"
 
 SPEC CHECKSUMS:
+  FYLocationObjc: d3279f1e5e029fc30919f8798a3c3b4d0c00aba0
   ObjcSystemService: 2ec0ac23880cd574e750fc39e09f84c00841dbfa
 
-PODFILE CHECKSUM: abe767f9c5666cefb16c0418516dd5b578ce9785
+PODFILE CHECKSUM: 67852868dac23f309eda3d161d30f36704c9a1fb
 
 COCOAPODS: 1.16.2

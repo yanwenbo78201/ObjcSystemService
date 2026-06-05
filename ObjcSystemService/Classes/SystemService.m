@@ -15,16 +15,25 @@
 
 @implementation SystemService
 
-- (NSDictionary *)deviceInfo {
-    NSMutableDictionary *deviceInfoDict = [NSMutableDictionary dictionary];
-    NSDictionary *systemInfo = [DeviceService getDeviceSystemInfo];
-    [deviceInfoDict addEntriesFromDictionary:systemInfo];
-    [deviceInfoDict addEntriesFromDictionary:[StorageService getDeviceStorageInfo]];
-    [deviceInfoDict addEntriesFromDictionary:[NetworkService getDeviceCommunicationInfo]];
-    [deviceInfoDict addEntriesFromDictionary:[TimeService getDevicetimeInfo]];
-    deviceInfoDict[@"rooted"] = [BrokenService phoneBrokenStatus] == YES ? @"true" : @"false";
-    
-    return deviceInfoDict;
+- (void)deviceInfoWithCompletion:(void(^)(NSDictionary *info))completion {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        NSMutableDictionary *deviceInfoDict = [NSMutableDictionary dictionary];
+        NSDictionary *systemInfo = [DeviceService getDeviceSystemInfo];
+        [deviceInfoDict addEntriesFromDictionary:systemInfo];
+        [deviceInfoDict addEntriesFromDictionary:[StorageService getDeviceStorageInfo]];
+        [deviceInfoDict addEntriesFromDictionary:[TimeService getDevicetimeInfo]];
+        deviceInfoDict[@"rooted"] = [BrokenService phoneBrokenStatus] == YES ? @"true" : @"false";
+
+        [NetworkService getDeviceCommunicationInfoWithCompletion:^(NSDictionary *info) {
+            [deviceInfoDict addEntriesFromDictionary:info];
+
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (completion) {
+                    completion([deviceInfoDict copy]);
+                }
+            });
+        }];
+    });
 }
 
 @end

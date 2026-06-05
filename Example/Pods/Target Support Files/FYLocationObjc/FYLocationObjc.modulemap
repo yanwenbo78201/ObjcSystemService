@@ -1,0 +1,6 @@
+framework module FYLocationObjc {
+  umbrella header "FYLocationObjc-umbrella.h"
+
+  export *
+  module * { export * }
+}
