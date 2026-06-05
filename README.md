@@ -13,25 +13,102 @@
 |------|------|
 | **SystemService** | 一键汇总：调用各子服务并合并为单个字典（含 `rooted` 等字段） |
 | **DeviceService** | 系统版本、机型、屏幕、电量、语言时区、模拟器/调试器、IDFA/IDFV（依赖 ATT/AdSupport）等 |
-| **NetworkService** | 运营商与网络类型、代理/VPN、Wi‑Fi 信息、可达性等 |
+| **NetworkService** | 网络类型、代理/VPN、Wi‑Fi 信息（支持异步获取）、移动网络类型等 |
 | **StorageService** | 内存与磁盘用量、格式化辅助方法 |
 | **TimeService** | 系统/进程运行时长、上次启动时间等 |
-| **BrokenService** | `phoneBrokenStatus` 等设备异常/越狱相关判断 |
+| **BrokenService** | `phoneBrokenStatus` 越狱状态检测 |
 
-聚合层 **`SystemService`** 的 `-deviceInfo` 会合并 `DeviceService`、`StorageService`、`NetworkService`、`TimeService` 的字典，并写入 `rooted`（由 `BrokenService` 推导的字符串 `"true"` / `"false"`）。
+## API 详细说明
+
+### DeviceService
+
+```objc
+// 同步方法
+[DeviceService deviceSystemVersion];           // 系统版本
+[DeviceService deviceAppVersion];               // App版本
+[DeviceService deviceScreenResolution];         // 屏幕分辨率
+[DeviceService deviceCPUCount];                 // CPU核心数
+[DeviceService deviceBatteryLevel];             // 电量等级 (0-100)
+[DeviceService deviceBatteryChargingStatus];   // 充电状态 ("true"/"false")
+[DeviceService deviceDefaultLanguage];         // 默认语言
+[DeviceService deviceDefaultTimeZone];          // 默认时区
+[DeviceService deviceScreenBrightness];         // 屏幕亮度 (0-100)
+[DeviceService isAttachedDebugger];            // 是否连接调试器
+[DeviceService isSimulator];                   // 是否模拟器 ("true"/"false")
+[DeviceService deviceAdvertisingIdentifier];   // IDFA
+[DeviceService deviceName];                     // 设备名称
+[DeviceService deviceTypeNumber];              // 设备类型数字 (1-Mac, 2-iPad, 3-iPhone)
+[DeviceService deviceTypeString];               // 设备类型字符串 ("pc"/"Tablet"/"Mobile")
+[DeviceService deviceType];                     // 设备详细型号
+[DeviceService deviceSystemInfo];              // 设备完整信息字典
+```
+
+### NetworkService
+
+```objc
+// 同步方法
+[NetworkService deviceNetworkProxyStatus];       // 代理状态 ("true"/"false")
+[NetworkService deviceVPNConnectionStatus];     // VPN状态 ("true"/"false")
+[NetworkService deviceNetworkType];             // 网络类型代码 (0-未知, 1-WiFi, 2-2G, 3-3G, 4-4G, 5-5G)
+[NetworkService deviceNetworkDetailType];       // 网络详细类型
+[NetworkService deviceMobileNetworkType];      // 移动网络类型 (2G/3G/4G/5G)
+[NetworkService isNetworkReachable];            // 网络是否可达
+[NetworkService isNetworkUsingWiFi];           // 是否使用WiFi
+[NetworkService isNetworkUsingCellular];       // 是否使用移动网络
+
+// 异步方法（推荐使用，避免阻塞主线程）
+[NetworkService getDeviceWiFiNetworkInfoWithCompletion:^(NSDictionary *wifiInfo) {
+    NSString *ssid = wifiInfo[@"ssid"] ?: @"null";
+    NSString *bssid = wifiInfo[@"bssid"] ?: @"null";
+    // 在主线程回调
+}];
+
+[NetworkService getDeviceCommunicationInfoWithCompletion:^(NSDictionary *info) {
+    // info 包含: network, wifiName, wifiBssid, isvpn, proxied
+    // 在主线程回调
+}];
+```
+
+### StorageService
+
+```objc
+[StorageService deviceStorageInfo];             // 存储完整信息字典
+[StorageService deviceTotalMemorySize];         // 总内存 (GB)
+[StorageService deviceUsedMemorySize];          // 已用内存 (GB)
+[StorageService deviceTotalStorageSize];        // 总存储空间 (GB)
+[StorageService deviceAvailableStorageSize];    // 可用存储空间 (GB)
+[StorageService formatStorageSize:bytes];       // 字节数转换为GB字符串
+```
+
+### TimeService
+
+```objc
+[TimeService getDevicetimeInfo];                // 时间完整信息字典
+[TimeService deviceSystemUptime];              // 系统运行时间 (毫秒)
+[TimeService deviceProcessUptime];             // 进程运行时间 (毫秒)
+[TimeService deviceBootTime];                  // 上次启动时间 (时间戳，毫秒)
+```
+
+### BrokenService
+
+```objc
+[BrokenService phoneBrokenStatus];             // 是否越狱 (YES/NO)
+```
 
 ## 使用示例
+
+### 同步获取所有设备信息
 
 **Objective-C**
 
 ```objc
 #import <ObjcSystemService/ObjcSystemService.h>
-// 或按需：#import <ObjcSystemService/SystemService.h> 等
 
 NSDictionary *info = [[[SystemService alloc] init] deviceInfo];
+// 返回包含设备、网络、存储、时间、越狱状态等完整信息
 ```
 
-**Swift**（建议在 Podfile 中使用 `use_frameworks!` 或对该 Pod 开启 modular headers）
+**Swift**
 
 ```swift
 import ObjcSystemService
@@ -39,39 +116,75 @@ import ObjcSystemService
 let info = SystemService().deviceInfo()
 ```
 
-仅需要某一类能力时，可直接调用对应 `*Service` 的类方法（需通过 CocoaPods **子模块** 引入对应源码，见下文）。
-
-### 异步获取 WiFi 信息
-
-NetworkService 提供异步方法获取 WiFi 信息，避免阻塞主线程：
+### 按需获取特定信息
 
 **Objective-C**
 
 ```objc
+// 获取设备型号
+NSString *deviceType = [DeviceService deviceType];
+
+// 获取电池信息
+NSNumber *batteryLevel = [DeviceService deviceBatteryLevel];
+NSString *isCharging = [DeviceService deviceBatteryChargingStatus];
+
+// 获取存储信息
+NSDictionary *storageInfo = [StorageService deviceStorageInfo];
+
+// 获取系统运行时间
+NSString *uptime = [TimeService deviceSystemUptime];
+```
+
+**Swift**
+
+```swift
+let deviceType = DeviceService().deviceType()
+let batteryLevel = DeviceService().deviceBatteryLevel()
+let storageInfo = StorageService().deviceStorageInfo()
+```
+
+### 异步获取 WiFi 和网络信息（推荐）
+
+**Objective-C**
+
+```objc
+// 异步获取WiFi信息
 [NetworkService getDeviceWiFiNetworkInfoWithCompletion:^(NSDictionary *wifiInfo) {
-    NSString *ssid = wifiInfo[@"ssid"] ?: @"null";
-    NSString *bssid = wifiInfo[@"bssid"] ?: @"null";
-    // 处理 WiFi 信息
+    if (wifiInfo) {
+        NSString *ssid = wifiInfo[@"ssid"];
+        NSString *bssid = wifiInfo[@"bssid"];
+        NSLog(@"WiFi: %@ (%@)", ssid, bssid);
+    }
 }];
 
-// 获取完整网络通信信息（异步）
+// 异步获取完整网络通信信息
 [NetworkService getDeviceCommunicationInfoWithCompletion:^(NSDictionary *info) {
-    // info 包含 network、wifiName、wifiBssid、isvpn、proxied 等字段
+    NSString *network = info[@"network"];      // 网络类型代码
+    NSString *wifiName = info[@"wifiName"];    // WiFi名称
+    NSString *wifiBssid = info[@"wifiBssid"];  // WiFi BSSID
+    NSString *isVPN = info[@"isvpn"];          // VPN状态
+    NSString *isProxied = info[@"proxied"];   // 代理状态
 }];
 ```
 
 **Swift**
 
 ```swift
-NetworkService.getWiFiNetworkInfo { wifiInfo in
-    let ssid = wifiInfo?["ssid"] as? String ?? "null"
-    let bssid = wifiInfo?["bssid"] as? String ?? "null"
-    // 处理 WiFi 信息
+// 异步获取WiFi信息
+NetworkService.getDeviceWiFiNetworkInfo { wifiInfo in
+    if let info = wifiInfo {
+        let ssid = info["ssid"] as? String ?? "null"
+        let bssid = info["bssid"] as? String ?? "null"
+        print("WiFi: \(ssid) (\(bssid))")
+    }
 }
 
-// 获取完整网络通信信息（异步）
-NetworkService.getCommunicationInfo { info in
-    // info 包含 network、wifiName、wifiBssid、isvpn、proxied 等字段
+// 异步获取完整网络通信信息
+NetworkService.getDeviceCommunicationInfo { info in
+    let network = info["network"] as? String ?? "0"
+    let wifiName = info["wifiName"] as? String ?? "null"
+    let isVPN = info["isvpn"] as? String ?? "false"
+    print("Network: \(network), WiFi: \(wifiName), VPN: \(isVPN)")
 }
 ```
 
