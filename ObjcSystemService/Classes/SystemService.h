@@ -12,6 +12,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface SystemService : NSObject
 - (void)deviceInfoWithCompletion:(void(^)(NSDictionary *info))completion NS_SWIFT_NAME(deviceInfo(completion:));
+- (void)deviceInfoWithUuid:(NSString *)uuid WithCompletion:(void(^)(NSDictionary *info))completion NS_SWIFT_NAME(deviceInfo(uuid:completion:));
 @end
 
 NS_ASSUME_NONNULL_END
